@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Hardware & Network Info</title>
+    <title>Device Fingerprinting for Multi-Account Detection</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,10 +38,27 @@
             font-style: italic;
             color: #777;
         }
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+        .input-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>PC Hardware & Network Information</h1>
+    <h1>Device Fingerprinting & Multi-Account Detection</h1>
+    <div class="input-section">
+        <label for="accountId">Enter Account ID: </label>
+        <input type="text" id="accountId" placeholder="e.g., user123">
+        <button onclick="registerAccount()">Register Account</button>
+    </div>
     <table id="infoTable">
         <thead>
             <tr>
@@ -51,32 +68,57 @@
         </thead>
         <tbody id="tableBody">
             <tr>
-                <td colspan="2" class="loading">Loading information...</td>
+                <td colspan="2" class="loading">Loading device information...</td>
             </tr>
         </tbody>
     </table>
 
     <script>
-        // Function to generate a simple pseudo-unique ID based on browser fingerprint
-        function generatePseudoUniqueId() {
-            const fingerprint = [
-                navigator.userAgent,
-                screen.width,
-                screen.height,
-                screen.colorDepth,
-                navigator.language,
-                new Date().getTimezoneOffset()
-            ].join('|');
-            // Simple hash function for pseudo-unique ID
+        // Simple hash function for fingerprinting
+        function hashString(str) {
             let hash = 0;
-            for (let i = 0; i < fingerprint.length; i++) {
-                hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
                 hash = hash & hash;
             }
             return Math.abs(hash).toString(16);
         }
 
-        // Function to fetch public IP address
+        // Generate device fingerprint
+        function generateFingerprint() {
+            // Collect browser and device properties
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('fingerprint', 2, 2);
+            const canvasData = canvas.toDataURL();
+
+            const properties = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset(),
+                navigator.hardwareConcurrency || 0,
+                navigator.deviceMemory || 0,
+                canvasData,
+                // WebGL info (for additional uniqueness)
+                (() => {
+                    try {
+                        const gl = document.createElement('canvas').getContext('webgl');
+                        if (!gl) return '';
+                        return gl.getParameter(gl.RENDERER) + gl.getParameter(gl.VENDOR);
+                    } catch (e) {
+                        return '';
+                    }
+                })()
+            ].join('|');
+
+            return hashString(properties);
+        }
+
+        // Fetch public IP address
         async function getPublicIP() {
             try {
                 const response = await fetch('https://api.ipify.org?format=json');
@@ -87,35 +129,73 @@
             }
         }
 
-        // Function to gather and display system info
-        async function displaySystemInfo() {
+        // Simulate backend storage with localStorage (replace with real database in production)
+        function getStoredAccounts() {
+            return JSON.parse(localStorage.getItem('accounts') || '{}');
+        }
+
+        function saveAccount(accountId, fingerprint, ip) {
+            const accounts = getStoredAccounts();
+            if (!accounts[accountId]) {
+                accounts[accountId] = { fingerprint, ip, timestamp: new Date().toISOString() };
+                localStorage.setItem('accounts', JSON.stringify(accounts));
+            }
+        }
+
+        // Check for multi-account usage
+        function checkMultiAccount(fingerprint, currentAccountId) {
+            const accounts = getStoredAccounts();
+            const matchingAccounts = Object.keys(accounts).filter(
+                id => accounts[id].fingerprint === fingerprint && id !== currentAccountId
+            );
+            return matchingAccounts.length > 0
+                ? `Warning: Multiple accounts detected (${matchingAccounts.join(', ')})`
+                : 'No multi-account issues';
+        }
+
+        // Display device info and multi-account status
+        async function displayDeviceInfo(accountId = 'N/A') {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = ''; // Clear loading message
 
-            // Gather system information
+            const fingerprint = generateFingerprint();
+            const ip = await getPublicIP();
+            const multiAccountStatus = checkMultiAccount(fingerprint, accountId);
+
             const systemInfo = {
-                'Pseudo-Unique ID': generatePseudoUniqueId(),
-                'Public IP Address': await getPublicIP(),
+                'Account ID': accountId,
+                'Device Fingerprint': fingerprint,
+                'Public IP Address': ip,
                 'Operating System': navigator.platform,
                 'Browser': navigator.userAgent,
-                'Browser Language': navigator.language || navigator.userLanguage,
                 'Screen Resolution': `${screen.width}x${screen.height}`,
-                'Screen Color Depth': screen.colorDepth,
-                'Timezone Offset': `${new Date().getTimezoneOffset() / -60} hours from UTC`,
                 'CPU Cores': navigator.hardwareConcurrency || 'Unknown',
-                'Device Memory (GB)': navigator.deviceMemory || 'Unknown'
+                'Multi-Account Status': multiAccountStatus
             };
 
-            // Populate table
             for (const [key, value] of Object.entries(systemInfo)) {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${key}</td><td>${value}</td>`;
+                row.innerHTML = `<td>${key}</td><td class="${key === 'Multi-Account Status' && value.includes('Warning') ? 'warning' : ''}">${value}</td>`;
                 tableBody.appendChild(row);
             }
         }
 
-        // Run the function when the page loads
-        window.onload = displaySystemInfo;
+        // Register an account
+        function registerAccount() {
+            const accountId = document.getElementById('accountId').value.trim();
+            if (!accountId) {
+                alert('Please enter an Account ID');
+                return;
+            }
+            const fingerprint = generateFingerprint();
+            getPublicIP().then(ip => {
+                saveAccount(accountId, fingerprint, ip);
+                displayDeviceInfo(accountId);
+            });
+        }
+
+        // Initial load
+        window.onload = () => displayDeviceInfo();
     </script>
 </body>
 </html>
