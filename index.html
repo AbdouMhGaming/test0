@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War of Ages - Strategic Warfare Through Time</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen active">
+            <div class="logo-container">
+                <h1>WAR OF AGES</h1>
+                <p>Strategic Warfare Through Time</p>
+            </div>
+            <div class="menu-buttons">
+                <button id="play-button" class="menu-button">Play Game</button>
+                <button id="connect-wallet-button" class="menu-button">Connect Wallet</button>
+                <button id="collection-button" class="menu-button">My Collection</button>
+                <button id="marketplace-button" class="menu-button">Marketplace</button>
+                <button id="settings-button" class="menu-button">Settings</button>
+            </div>
+            <div class="web3-status">
+                <span id="wallet-status">Wallet: Not Connected</span>
+                <span id="token-balance">WOA Tokens: 0</span>
+            </div>
+        </div>
+
+        <!-- Era Selection Screen -->
+        <div id="era-selection" class="screen">
+            <h2>Choose Your Era</h2>
+            <div class="era-container">
+                <div class="era" data-era="ancient">
+                    <h3>Ancient</h3>
+                    <p>3000 BCE - 500 CE</p>
+                    <div class="era-image ancient"></div>
+                    <p class="era-description">Command legions, chariots, and early siege weapons in the dawn of warfare.</p>
+                </div>
+                <div class="era" data-era="medieval">
+                    <h3>Medieval</h3>
+                    <p>500 - 1500 CE</p>
+                    <div class="era-image medieval"></div>
+                    <p class="era-description">Lead knights, archers, and catapults in the age of castles and kingdoms.</p>
+                </div>
+                <div class="era" data-era="industrial">
+                    <h3>Industrial</h3>
+                    <p>1500 - 1900 CE</p>
+                    <div class="era-image industrial"></div>
+                    <p class="era-description">Deploy early firearms, cannons, and the first mechanized units.</p>
+                </div>
+                <div class="era" data-era="modern">
+                    <h3>Modern</h3>
+                    <p>1900 - 2000 CE</p>
+                    <div class="era-image modern"></div>
+                    <p class="era-description">Command tanks, aircraft, and specialized infantry in global warfare.</p>
+                </div>
+                <div class="era" data-era="future">
+                    <h3>Future</h3>
+                    <p>2000 CE - Beyond</p>
+                    <div class="era-image future"></div>
+                    <p class="era-description">Control drones, mechs, and cyber units in the battlefield of tomorrow.</p>
+                </div>
+            </div>
+            <button id="back-to-menu" class="back-button">Back to Menu</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div id="resources-bar">
+                <div class="resource">
+                    <i class="fas fa-coins"></i>
+                    <span id="gold">500</span>
+                </div>
+                <div class="resource">
+                    <i class="fas fa-hammer"></i>
+                    <span id="production">10/s</span>
+                </div>
+                <div class="resource">
+                    <i class="fas fa-users"></i>
+                    <span id="population">5/20</span>
+                </div>
+                <div class="resource">
+                    <i class="fas fa-flask"></i>
+                    <span id="research">0</span>
+                </div>
+                <div id="current-era">
+                    <span id="era-name">Ancient Era</span>
+                </div>
+            </div>
+
+            <div id="game-area">
+                <canvas id="game-canvas"></canvas>
+                <div id="selection-info"></div>
+            </div>
+
+            <div id="game-controls">
+                <div id="unit-controls" class="scrollable-content">
+                    <h3>Units</h3>
+                    <div id="unit-buttons"></div>
+                </div>
+                <div id="building-controls" class="scrollable-content">
+                    <h3>Buildings</h3>
+                    <div id="building-buttons"></div>
+                </div>
+                <div id="tech-controls" class="scrollable-content">
+                    <h3>Technologies</h3>
+                    <div id="tech-tree"></div>
+                </div>
+            </div>
+
+            <button id="end-game" class="game-button">Surrender</button>
+        </div>
+
+        <!-- Collection Screen -->
+        <div id="collection-screen" class="screen">
+            <h2>My NFT Collection</h2>
+            <div class="collection-tabs">
+                <button class="tab-button active" data-tab="units">Units</button>
+                <button class="tab-button" data-tab="commanders">Commanders</button>
+                <button class="tab-button" data-tab="artifacts">Artifacts</button>
+            </div>
+            <div class="collection-content scrollable-content">
+                <div id="units-collection" class="collection-tab active">
+                    <p class="empty-collection">Connect your wallet to view your NFT units.</p>
+                </div>
+                <div id="commanders-collection" class="collection-tab">
+                    <p class="empty-collection">Connect your wallet to view your NFT commanders.</p>
+                </div>
+                <div id="artifacts-collection" class="collection-tab">
+                    <p class="empty-collection">Connect your wallet to view your NFT artifacts.</p>
+                </div>
+            </div>
+            <button id="back-from-collection" class="back-button">Back to Menu</button>
+        </div>
+
+        <!-- Marketplace Screen -->
+        <div id="marketplace-screen" class="screen">
+            <h2>NFT Marketplace</h2>
+            <div class="marketplace-filters">
+                <select id="marketplace-category">
+                    <option value="all">All Items</option>
+                    <option value="units">Units</option>
+                    <option value="commanders">Commanders</option>
+                    <option value="artifacts">Artifacts</option>
+                </select>
+                <select id="marketplace-era">
+                    <option value="all">All Eras</option>
+                    <option value="ancient">Ancient</option>
+                    <option value="medieval">Medieval</option>
+                    <option value="industrial">Industrial</option>
+                    <option value="modern">Modern</option>
+                    <option value="future">Future</option>
+                </select>
+                <select id="marketplace-sort">
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rarity">Rarity</option>
+                    <option value="newest">Newest</option>
+                </select>
+            </div>
+            <div class="marketplace-items scrollable-content">
+                <p class="connect-prompt">Connect your wallet to browse the marketplace.</p>
+            </div>
+            <button id="back-from-marketplace" class="back-button">Back to Menu</button>
+        </div>
+
+        <!-- Match History Screen -->
+        <div id="match-history-screen" class="screen">
+            <h2>Battle Records</h2>
+            <div class="match-history-container scrollable-content">
+                <table id="match-history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Era</th>
+                            <th>Result</th>
+                            <th>Rewards</th>
+                        </tr>
+                    </thead>
+                    <tbody id="match-history-body">
+                        <!-- Match history will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="back-from-history" class="back-button">Back to Menu</button>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen">
+            <h2>Game Settings</h2>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <h3>Audio</h3>
+                    <div class="setting">
+                        <label for="music-volume">Music Volume</label>
+                        <input type="range" id="music-volume" min="0" max="100" value="70">
+                    </div>
+                    <div class="setting">
+                        <label for="sfx-volume">SFX Volume</label>
+                        <input type="range" id="sfx-volume" min="0" max="100" value="80">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Graphics</h3>
+                    <div class="setting">
+                        <label for="graphics-quality">Quality</label>
+                        <select id="graphics-quality">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="particle-effects">Particle Effects</label>
+                        <input type="checkbox" id="particle-effects" checked>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Gameplay</h3>
+                    <div class="setting">
+                        <label for="game-speed">Game Speed</label>
+                        <select id="game-speed">
+                            <option value="slow">Slow</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="fast">Fast</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="auto-save">Auto-Save</label>
+                        <input type="checkbox" id="auto-save" checked>
+                    </div>
+                </div>
+            </div>
+            <button id="back-from-settings" class="back-button">Back to Menu</button>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen">
+            <div class="loading-content">
+                <h2>Loading War of Ages</h2>
+                <div class="loading-bar-container">
+                    <div id="loading-bar"></div>
+                </div>
+                <p id="loading-text">Preparing battlefield...</p>
+            </div>
+        </div>
+
+        <!-- Match Found Modal -->
+        <div id="match-found-modal" class="modal">
+            <div class="modal-content">
+                <h2>Match Found!</h2>
+                <div class="match-details">
+                    <div class="player-info">
+                        <div class="player-avatar you"></div>
+                        <p>You</p>
+                        <p class="player-era">Ancient Era</p>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="player-info">
+                        <div class="player-avatar opponent"></div>
+                        <p id="opponent-name">CryptoCommander</p>
+                        <p class="player-era">Medieval Era</p>
+                    </div>
+                </div>
+                <div class="match-actions">
+                    <button id="accept-match" class="match-button accept">Accept</button>
+                    <button id="decline-match" class="match-button decline">Decline</button>
+                </div>
+                <p class="countdown">15</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/eras.js"></script>
+    <script src="scripts/units.js"></script>
+    <script src="scripts/web3.js"></script>
+    <script src="scripts/ui.js"></script>
+    <script src="scripts/game.js"></script>
+</body>
+</html>
